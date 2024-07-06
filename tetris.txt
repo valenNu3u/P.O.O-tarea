@@ -50,7 +50,7 @@ namespace Tetris
                 {
                     if (formaActual[fila, col] == 1)
                     {
-                        Bloques.Add(new Bloque(colInicial + col * 2, filaInicial + fila, color)); // Colocando con un espacio entre bloques
+                        Bloques.Add(new Bloque(colInicial + col * 2, filaInicial + fila, color));
                     }
                 }
             }
@@ -261,7 +261,7 @@ namespace Tetris
                     {
                         bloque.Fila++;
                     }
-                    fila++; // Volvemos a comprobar la fila actual después de desplazar los bloques hacia abajo
+                    fila++; 
                 }
             }
         }
