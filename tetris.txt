@@ -1,0 +1,264 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+
+namespace Tetris
+{
+    public class Bloque
+    {
+        public int Col { get; set; }
+        public int Fila { get; set; }
+        public ConsoleColor Color { get; set; }
+
+        public Bloque(int col, int fila, ConsoleColor color)
+        {
+            Col = col;
+            Fila = fila;
+            Color = color;
+        }
+    }
+
+    public class Tetromino
+    {
+        public List<Bloque> Bloques { get; private set; }
+        private int[,] formaActual;
+        private int colInicial;
+        private int filaInicial;
+        private ConsoleColor color;
+
+        private static readonly List<int[,]> Formas = new List<int[,]>
+        {
+            new int[,] // I
+            {
+                {1, 0, 1, 0, 1, 0, 1}
+            },
+            new int[,] // O
+            {
+                {1, 1, 1},
+                {1, 1, 1},
+                {1, 1, 1}
+            },
+            new int[,] // T
+            {
+                {0, 1, 0},
+                {1, 1, 1},
+                {1, 0, 1},
+                {0, 1, 0}
+            },
+            new int[,] // S
+            {
+                {0, 1, 1, 1},
+                {1, 1, 0, 0},
+                {0, 1, 1, 1}
+            },
+            new int[,] // Z
+            {
+                {1, 1, 0, 0},
+                {0, 1, 1, 1},
+                {1, 1, 0, 0}
+            },
+            new int[,] // J
+            {
+                {1, 0, 0},
+                {1, 1, 1},
+                {1, 0, 0},
+                {1, 0, 0}
+            },
+            new int[,] // L
+            {
+                {0, 0, 1},
+                {1, 1, 1},
+                {0, 0, 1},
+                {0, 0, 1}
+            }
+        };
+
+        private static readonly ConsoleColor[] Colores = new ConsoleColor[]
+        {
+            ConsoleColor.Cyan,
+            ConsoleColor.Yellow,
+            ConsoleColor.Magenta,
+            ConsoleColor.Green,
+            ConsoleColor.Red,
+            ConsoleColor.Blue,
+            ConsoleColor.DarkYellow
+        };
+
+        public Tetromino(int colInicial, int filaInicial)
+        {
+            var rand = new Random();
+            formaActual = Formas[rand.Next(Formas.Count)];
+            color = Colores[rand.Next(Colores.Length)];
+            this.colInicial = colInicial;
+            this.filaInicial = filaInicial;
+            ActualizarBloques();
+        }
+
+        private void ActualizarBloques()
+        {
+            Bloques = new List<Bloque>();
+            for (int fila = 0; fila < formaActual.GetLength(0); fila++)
+            {
+                for (int col = 0; col < formaActual.GetLength(1); col++)
+                {
+                    if (formaActual[fila, col] == 1)
+                    {
+                        Bloques.Add(new Bloque(colInicial + col * 2, filaInicial + fila, color)); 
+                    }
+                }
+            }
+        }
+
+        public void Mover(int dCol, int dFila)
+        {
+            colInicial += dCol;
+            filaInicial += dFila;
+            ActualizarBloques();
+        }
+
+        public void Rotar()
+        {
+            int[,] nuevaForma = new int[formaActual.GetLength(1), formaActual.GetLength(0)];
+            for (int fila = 0; fila < formaActual.GetLength(0); fila++)
+            {
+                for (int col = 0; col < formaActual.GetLength(1); col++)
+                {
+                    nuevaForma[col, formaActual.GetLength(0) - fila - 1] = formaActual[fila, col];
+                }
+            }
+            formaActual = nuevaForma;
+            ActualizarBloques();
+        }
+    }
+
+    public class TetrisGame
+    {
+        private const int BoardWidth = 80;
+        private const int BoardHeight = 25;
+        private List<Bloque> bloquesFijos = new List<Bloque>();
+        private Tetromino piezaActual;
+        private bool juegoTerminado;
+
+        private void MostrarBloques()
+        {
+            Console.Clear();
+            foreach (var bloque in bloquesFijos)
+            {
+                Console.SetCursorPosition(bloque.Col, bloque.Fila);
+                Console.ForegroundColor = bloque.Color;
+                Console.Write("■");
+            }
+            foreach (var bloque in piezaActual.Bloques)
+            {
+                Console.SetCursorPosition(bloque.Col, bloque.Fila);
+                Console.ForegroundColor = bloque.Color;
+                Console.Write("■");
+            }
+            Console.ResetColor();
+        }
+
+        private void EliminarFilasCompletas()
+        {
+            for (int fila = BoardHeight - 1; fila >= 0; fila--)
+            {
+                if (bloquesFijos.Count(b => b.Fila == fila) == BoardWidth / 2)
+                {
+                    var bloquesEnFila = bloquesFijos.Where(b => b.Fila == fila).ToList();
+                    foreach (var bloque in bloquesEnFila)
+                    {
+                        bloquesFijos.Remove(bloque);
+                    }
+                    foreach (var bloque in bloquesFijos.Where(b => b.Fila < fila))
+                    {
+                        bloque.Fila++;
+                    }
+                    fila++; // Volvemos a comprobar la fila actual después de desplazar los bloques hacia abajo
+                }
+            }
+        }
+
+        private void ProcesarEntradaUsuario()
+        {
+            if (Console.KeyAvailable)
+            {
+                var tecla = Console.ReadKey(true).Key;
+                switch (tecla)
+                {
+                    case ConsoleKey.LeftArrow:
+                        if (piezaActual.Bloques.All(b => b.Col > 0) && piezaActual.Bloques.All(b => !bloquesFijos.Any(f => f.Col == b.Col - 2 && f.Fila == b.Fila)))
+                        {
+                            piezaActual.Mover(-2, 0);
+                        }
+                        break;
+                    case ConsoleKey.RightArrow:
+                        if (piezaActual.Bloques.All(b => b.Col < BoardWidth - 2) && piezaActual.Bloques.All(b => !bloquesFijos.Any(f => f.Col == b.Col + 2 && f.Fila == b.Fila)))
+                        {
+                            piezaActual.Mover(2, 0);
+                        }
+                        break;
+                    case ConsoleKey.DownArrow:
+                        if (piezaActual.Bloques.All(b => b.Fila < BoardHeight - 1) && piezaActual.Bloques.All(b => !bloquesFijos.Any(f => f.Col == b.Col && f.Fila == b.Fila + 1)))
+                        {
+                            piezaActual.Mover(0, 1);
+                        }
+                        break;
+                    case ConsoleKey.Spacebar:
+                        while (piezaActual.Bloques.All(b => b.Fila < BoardHeight - 1) && piezaActual.Bloques.All(b => !bloquesFijos.Any(f => f.Col == b.Col && f.Fila == b.Fila + 1)))
+                        {
+                            piezaActual.Mover(0, 1);
+                        }
+                        break;
+                }
+            }
+        }
+
+        public void Jugar()
+        {
+            Console.CursorVisible = false;
+            var rand = new Random();
+            var centroColumna = BoardWidth / 2;
+            var rangoColumna = 10; 
+            juegoTerminado = false;
+
+            piezaActual = new Tetromino(centroColumna + rand.Next(-rangoColumna, rangoColumna + 1), 0);
+
+            while (!juegoTerminado)
+            {
+                MostrarBloques();
+                Thread.Sleep(300);
+                ProcesarEntradaUsuario();
+
+                if (piezaActual.Bloques.All(b => b.Fila < BoardHeight - 1) &&
+                    piezaActual.Bloques.All(b => !bloquesFijos.Any(f => f.Col == b.Col && f.Fila == b.Fila + 1)))
+                {
+                    piezaActual.Mover(0, 1);
+                }
+                else
+                {
+                    foreach (var bloque in piezaActual.Bloques)
+                    {
+                        bloquesFijos.Add(bloque);
+                    }
+                    EliminarFilasCompletas();
+                    piezaActual = new Tetromino(centroColumna + rand.Next(-rangoColumna, rangoColumna + 1), 0);
+
+                    if (piezaActual.Bloques.Any(b => bloquesFijos.Any(f => f.Col == b.Col && f.Fila == b.Fila)))
+                    {
+                        juegoTerminado = true;
+                        Console.Clear();
+                        Console.SetCursorPosition(BoardWidth / 2 - 5, BoardHeight / 2);
+                        Console.WriteLine("GAME OVER");
+                    }
+                }
+            }
+        }
+
+        static void Main(string[] args)
+        {
+            Console.SetWindowSize(BoardWidth, BoardHeight);
+            var game = new TetrisGame();
+            game.Jugar();
+        }
+    }
+}
