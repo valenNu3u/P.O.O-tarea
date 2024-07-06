@@ -1,0 +1,147 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+
+namespace Menu
+{
+    class MenuItem
+    {
+        public string Opcion { get; set; }
+
+        public MenuItem(string opcion)
+        {
+            Opcion = opcion;
+        }
+    }
+
+    class MenuPrincipal
+    {
+        List<Menu> menus = new List<Menu>();
+
+        public MenuPrincipal(Dictionary<string, string[]> menusDict)
+        {
+            int pos = 1;
+            foreach (var subMenu in menusDict)
+            {
+                menus.Add(new Menu(pos++, subMenu.Key, subMenu.Value));
+            }
+        }
+
+        public void Dibujar(int columna, int fila, int subMenuSeleccionado, int itemSeleccionado)
+        {
+            Console.Clear();
+            Console.SetCursorPosition(columna, fila);
+
+            for (int i = 0; i < menus.Count; i++)
+            {
+                Menu menu = menus[i];
+                if (subMenuSeleccionado - 1 == i)
+                {
+                    Console.BackgroundColor = ConsoleColor.Red;
+                    Console.ForegroundColor = ConsoleColor.White;
+                }
+                Console.Write($"{menu.NombreMenu} ");
+                Console.ResetColor();
+            }
+
+            fila++;
+
+            for (int i = 0; i < menus[subMenuSeleccionado - 1].Items.Length; i++)
+            {
+                Console.SetCursorPosition(columna + 2, fila++);
+                if (itemSeleccionado == i)
+                {
+                    Console.BackgroundColor = ConsoleColor.Red;
+                    Console.ForegroundColor = ConsoleColor.White;
+                }
+                Console.WriteLine(menus[subMenuSeleccionado - 1].Items[i]);
+                Console.ResetColor();
+            }
+        }
+
+        public void EjecutarOpcion(int subMenuSeleccionado, int itemSeleccionado)
+        {
+            string opcion = menus[subMenuSeleccionado - 1].Items[itemSeleccionado];
+            Console.Clear();
+            Console.WriteLine($"Has seleccionado la opción: {opcion}");
+            // Aquí puedes agregar la lógica para ejecutar la opción seleccionada.
+        }
+    }
+
+    class Menu
+    {
+        public string[] Items { get; }
+        public string NombreMenu { get; }
+        public int PosMenu { get; }
+
+        public Menu(int posMenu, string nombreMenu, string[] opciones)
+        {
+            Items = opciones;
+            NombreMenu = nombreMenu;
+            PosMenu = posMenu;
+        }
+    }
+
+    internal class Program
+    {
+        static void Main(string[] args)
+        {
+            string[] menu1 = { "Nuevo Cliente", "Modificar Cliente", "Listar Clientes", "Salir" };
+            string[] menu2 = { "Nuevo Producto", "Modificar Producto", "Eliminar Producto", "Listar Producto", "Salir" };
+            string[] menu3 = { "Ver Cliente", "Ver Producto", "Salir" };
+
+            var menus = new Dictionary<string, string[]>
+            {
+                { "Archivo", menu1 }, { "Editar", menu2 }, { "Ver", menu3 }
+            };
+
+            MenuPrincipal menu = new MenuPrincipal(menus);
+
+            int subMenuSeleccionado = 1;
+            int itemSeleccionado = 0;
+
+            ConsoleKey key;
+            do
+            {
+                menu.Dibujar(1, 1, subMenuSeleccionado, itemSeleccionado);
+
+                key = Console.ReadKey(true).Key;
+                switch (key)
+                {
+                    case ConsoleKey.LeftArrow:
+                        if (subMenuSeleccionado > 1)
+                        {
+                            subMenuSeleccionado--;
+                            itemSeleccionado = 0;
+                        }
+                        break;
+                    case ConsoleKey.RightArrow:
+                        if (subMenuSeleccionado < menus.Count)
+                        {
+                            subMenuSeleccionado++;
+                            itemSeleccionado = 0;
+                        }
+                        break;
+                    case ConsoleKey.UpArrow:
+                        if (itemSeleccionado > 0)
+                        {
+                            itemSeleccionado--;
+                        }
+                        break;
+                    case ConsoleKey.DownArrow:
+                        if (itemSeleccionado < menus[menus.Keys.ToList()[subMenuSeleccionado - 1]].Length - 1)
+                        {
+                            itemSeleccionado++;
+                        }
+                        break;
+                    case ConsoleKey.Enter:
+                        menu.EjecutarOpcion(subMenuSeleccionado, itemSeleccionado);
+                        Console.ReadKey();
+                        break;
+                }
+
+            } while (key != ConsoleKey.Escape);
+        }
+    }
+}
