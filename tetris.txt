@@ -19,83 +19,29 @@ namespace Tetris
         }
     }
 
-    public class Tetromino
+    public abstract class Pieza
     {
+        protected int[,] formaActual;
+        protected int colInicial;
+        protected int filaInicial;
+        protected ConsoleColor color;
+
         public List<Bloque> Bloques { get; private set; }
-        private int[,] formaActual;
-        private int colInicial;
-        private int filaInicial;
-        private ConsoleColor color;
 
-        private static readonly List<int[,]> Formas = new List<int[,]>
-        {
-            new int[,] // I
-            {
-                {1, 0, 1, 0, 1, 0, 1}
-            },
-            new int[,] // O
-            {
-                {1, 1, 1},
-                {1, 1, 1},
-                {1, 1, 1}
-            },
-            new int[,] // T
-            {
-                {0, 1, 0},
-                {1, 1, 1},
-                {1, 0, 1},
-                {0, 1, 0}
-            },
-            new int[,] // S
-            {
-                {0, 1, 1, 1},
-                {1, 1, 0, 0},
-                {0, 1, 1, 1}
-            },
-            new int[,] // Z
-            {
-                {1, 1, 0, 0},
-                {0, 1, 1, 1},
-                {1, 1, 0, 0}
-            },
-            new int[,] // J
-            {
-                {1, 0, 0},
-                {1, 1, 1},
-                {1, 0, 0},
-                {1, 0, 0}
-            },
-            new int[,] // L
-            {
-                {0, 0, 1},
-                {1, 1, 1},
-                {0, 0, 1},
-                {0, 0, 1}
-            }
-        };
+        protected abstract int[,] ObtenerFormaInicial();
 
-        private static readonly ConsoleColor[] Colores = new ConsoleColor[]
+        public Pieza(int colInicial, int filaInicial)
         {
-            ConsoleColor.Cyan,
-            ConsoleColor.Yellow,
-            ConsoleColor.Magenta,
-            ConsoleColor.Green,
-            ConsoleColor.Red,
-            ConsoleColor.Blue,
-            ConsoleColor.DarkYellow
-        };
-
-        public Tetromino(int colInicial, int filaInicial)
-        {
-            var rand = new Random();
-            formaActual = Formas[rand.Next(Formas.Count)];
-            color = Colores[rand.Next(Colores.Length)];
+            formaActual = ObtenerFormaInicial();
+            color = ObtenerColor();
             this.colInicial = colInicial;
             this.filaInicial = filaInicial;
             ActualizarBloques();
         }
 
-        private void ActualizarBloques()
+        protected abstract ConsoleColor ObtenerColor();
+
+        protected void ActualizarBloques()
         {
             Bloques = new List<Bloque>();
             for (int fila = 0; fila < formaActual.GetLength(0); fila++)
@@ -104,7 +50,7 @@ namespace Tetris
                 {
                     if (formaActual[fila, col] == 1)
                     {
-                        Bloques.Add(new Bloque(colInicial + col * 2, filaInicial + fila, color)); 
+                        Bloques.Add(new Bloque(colInicial + col * 2, filaInicial + fila, color)); // Colocando con un espacio entre bloques
                     }
                 }
             }
@@ -132,13 +78,155 @@ namespace Tetris
         }
     }
 
+    public class PiezaI : Pieza
+    {
+        public PiezaI(int colInicial, int filaInicial) : base(colInicial, filaInicial) { }
+
+        protected override int[,] ObtenerFormaInicial()
+        {
+            return new int[,]
+            {
+                {1, 0, 1, 0, 1, 0, 1}
+            };
+        }
+
+        protected override ConsoleColor ObtenerColor()
+        {
+            return ConsoleColor.Cyan;
+        }
+    }
+
+    public class PiezaO : Pieza
+    {
+        public PiezaO(int colInicial, int filaInicial) : base(colInicial, filaInicial) { }
+
+        protected override int[,] ObtenerFormaInicial()
+        {
+            return new int[,]
+            {
+                {1, 1, 1},
+                {1, 1, 1},
+                {1, 1, 1}
+            };
+        }
+
+        protected override ConsoleColor ObtenerColor()
+        {
+            return ConsoleColor.Yellow;
+        }
+    }
+
+    public class PiezaT : Pieza
+    {
+        public PiezaT(int colInicial, int filaInicial) : base(colInicial, filaInicial) { }
+
+        protected override int[,] ObtenerFormaInicial()
+        {
+            return new int[,]
+            {
+                {0, 1, 0},
+                {1, 1, 1},
+                {1, 0, 1},
+                {0, 1, 0}
+            };
+        }
+
+        protected override ConsoleColor ObtenerColor()
+        {
+            return ConsoleColor.Magenta;
+        }
+    }
+
+    public class PiezaS : Pieza
+    {
+        public PiezaS(int colInicial, int filaInicial) : base(colInicial, filaInicial) { }
+
+        protected override int[,] ObtenerFormaInicial()
+        {
+            return new int[,]
+            {
+                {0, 1, 1, 1},
+                {1, 1, 0, 0},
+                {0, 1, 1, 1}
+            };
+        }
+
+        protected override ConsoleColor ObtenerColor()
+        {
+            return ConsoleColor.Green;
+        }
+    }
+
+    public class PiezaZ : Pieza
+    {
+        public PiezaZ(int colInicial, int filaInicial) : base(colInicial, filaInicial) { }
+
+        protected override int[,] ObtenerFormaInicial()
+        {
+            return new int[,]
+            {
+                {1, 1, 0, 0},
+                {0, 1, 1, 1},
+                {1, 1, 0, 0}
+            };
+        }
+
+        protected override ConsoleColor ObtenerColor()
+        {
+            return ConsoleColor.Red;
+        }
+    }
+
+    public class PiezaJ : Pieza
+    {
+        public PiezaJ(int colInicial, int filaInicial) : base(colInicial, filaInicial) { }
+
+        protected override int[,] ObtenerFormaInicial()
+        {
+            return new int[,]
+            {
+                {1, 0, 0},
+                {1, 1, 1},
+                {1, 0, 0},
+                {1, 0, 0}
+            };
+        }
+
+        protected override ConsoleColor ObtenerColor()
+        {
+            return ConsoleColor.Blue;
+        }
+    }
+
+    public class PiezaL : Pieza
+    {
+        public PiezaL(int colInicial, int filaInicial) : base(colInicial, filaInicial) { }
+
+        protected override int[,] ObtenerFormaInicial()
+        {
+            return new int[,]
+            {
+                {0, 0, 1},
+                {1, 1, 1},
+                {0, 0, 1},
+                {0, 0, 1}
+            };
+        }
+
+        protected override ConsoleColor ObtenerColor()
+        {
+            return ConsoleColor.DarkYellow;
+        }
+    }
+
     public class TetrisGame
     {
         private const int BoardWidth = 80;
         private const int BoardHeight = 25;
         private List<Bloque> bloquesFijos = new List<Bloque>();
-        private Tetromino piezaActual;
+        private Pieza piezaActual;
         private bool juegoTerminado;
+        private static readonly Random rand = new Random();
 
         private void MostrarBloques()
         {
@@ -209,28 +297,41 @@ namespace Tetris
                             piezaActual.Mover(0, 1);
                         }
                         break;
+                    case ConsoleKey.UpArrow:
+                        piezaActual.Rotar();
+                        break;
                 }
             }
+        }
+
+        private void GenerarNuevaPieza()
+        {
+            int colInicial = BoardWidth / 2 - 1;
+            int filaInicial = 0;
+            int tipoPieza = rand.Next(7);
+
+            piezaActual = tipoPieza switch
+            {
+                0 => new PiezaI(colInicial, filaInicial),
+                1 => new PiezaO(colInicial, filaInicial),
+                2 => new PiezaT(colInicial, filaInicial),
+                3 => new PiezaS(colInicial, filaInicial),
+                4 => new PiezaZ(colInicial, filaInicial),
+                5 => new PiezaJ(colInicial, filaInicial),
+                6 => new PiezaL(colInicial, filaInicial),
+                _ => new PiezaI(colInicial, filaInicial)
+            };
         }
 
         public void Jugar()
         {
             Console.CursorVisible = false;
-            var rand = new Random();
-            var centroColumna = BoardWidth / 2;
-            var rangoColumna = 10; 
-            juegoTerminado = false;
-
-            piezaActual = new Tetromino(centroColumna + rand.Next(-rangoColumna, rangoColumna + 1), 0);
-
+            GenerarNuevaPieza();
             while (!juegoTerminado)
             {
                 MostrarBloques();
-                Thread.Sleep(300);
                 ProcesarEntradaUsuario();
-
-                if (piezaActual.Bloques.All(b => b.Fila < BoardHeight - 1) &&
-                    piezaActual.Bloques.All(b => !bloquesFijos.Any(f => f.Col == b.Col && f.Fila == b.Fila + 1)))
+                if (piezaActual.Bloques.All(b => b.Fila < BoardHeight - 1) && piezaActual.Bloques.All(b => !bloquesFijos.Any(f => f.Col == b.Col && f.Fila == b.Fila + 1)))
                 {
                     piezaActual.Mover(0, 1);
                 }
@@ -241,22 +342,14 @@ namespace Tetris
                         bloquesFijos.Add(bloque);
                     }
                     EliminarFilasCompletas();
-                    piezaActual = new Tetromino(centroColumna + rand.Next(-rangoColumna, rangoColumna + 1), 0);
-
-                    if (piezaActual.Bloques.Any(b => bloquesFijos.Any(f => f.Col == b.Col && f.Fila == b.Fila)))
-                    {
-                        juegoTerminado = true;
-                        Console.Clear();
-                        Console.SetCursorPosition(BoardWidth / 2 - 5, BoardHeight / 2);
-                        Console.WriteLine("GAME OVER");
-                    }
+                    GenerarNuevaPieza();
                 }
+                Thread.Sleep(200);
             }
         }
 
         static void Main(string[] args)
         {
-            Console.SetWindowSize(BoardWidth, BoardHeight);
             var game = new TetrisGame();
             game.Jugar();
         }
